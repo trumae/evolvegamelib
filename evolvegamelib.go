@@ -29,6 +29,7 @@ type Arena struct {
 	plantEnergy  int
 	plants       map[Pos]bool
 	animals      []Animal
+	moveDecr     int
 }
 
 func (a *Arena) AddPlants() {
@@ -71,19 +72,60 @@ func (animal *Animal) Move(arena *Arena) {
 	animal.energy = animal.energy - 1
 }
 
-func (animal *Animal) Turn() {
+func angle(genes [8]int, n int) int {
+	count := 0
+	for i, val := range genes {
+		count += val
+		if n <= count {
+			return i
+		}
+	}
+	return 7
+}
 
+func (animal *Animal) Turn() {
+	somaGenes := 0
+	for _, v := range animal.genes {
+		somaGenes += v
+	}
+	if somaGenes == 0 {
+		somaGenes = 10
+	}
+	x := rand.Intn(somaGenes)
+	animal.dir = angle(animal.genes, x)
 }
 
 func (animal *Animal) Eat(arena *Arena) {
-
+	_, ok := arena.plants[Pos{animal.x, animal.y}]
+	if ok {
+		animal.energy += arena.plantEnergy
+		delete(arena.plants, Pos{animal.x, animal.y})
+	}
 }
 
 func (animal *Animal) Reproduce(arena *Arena) {
-
+	if animal.energy >= animal.reproductionEnergy {
+		animal.energy = animal.energy / 2
+		animalnu := *animal
+		x := rand.Intn(8)
+		ngen := animal.genes[x] + rand.Intn(2)
+		if ngen > 1 {
+			animalnu.genes[x] = ngen
+		} else {
+			animalnu.genes[x] = 1
+		}
+		arena.animals = append(arena.animals, animalnu)
+	}
 }
 
 func (a *Arena) UpdateWorld() {
+	ans := make([]Animal, 0)
+	for _, val := range a.animals {
+		if val.energy > 0 {
+			ans = append(ans, val)
+		}
+	}
+	copy(a.animals, ans)
 	for i, _ := range a.animals {
 		a.animals[i].Turn()
 		a.animals[i].Move(a)
@@ -116,6 +158,11 @@ func (a *Arena) DrawWorldString() string {
 		}
 		fmt.Print("|\n")
 	}
+	fmt.Print("Number of animals:")
+	fmt.Print(len(a.animals))
+	fmt.Print("\nNumber of trees")
+	fmt.Print(len(a.plants))
+	fmt.Print("\n")
 	return ret
 }
 
@@ -140,6 +187,7 @@ func NewArena() *Arena {
 	a.plantEnergy = 200
 	a.plants = make(map[Pos]bool)
 	a.animals = make([]Animal, 0)
+	a.moveDecr = 10
 
 	return &a
 }
@@ -155,10 +203,10 @@ func NewArenaSample() *Arena {
 	a.plantEnergy = 200
 	a.plants = make(map[Pos]bool)
 	a.animals = make([]Animal, 0)
-
-	a.AddPlants()
+	a.moveDecr = 50
 
 	b := Animal{}
+	b.genes = [8]int{2, 2, 2, 2, 2, 2, 2, 2}
 	b.x = 20
 	b.y = 15
 	a.animals = append(a.animals, b)
