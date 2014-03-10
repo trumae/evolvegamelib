@@ -69,7 +69,7 @@ func (animal *Animal) Move(arena *Arena) {
 	animal.x = abs((animal.x+deltaX)+arena.width) % arena.width
 	animal.y = abs((animal.y+deltaY)+arena.height) % arena.height
 
-	animal.energy = animal.energy - 1
+	animal.energy = animal.energy - 5
 }
 
 func angle(genes [8]int, n int) int {
@@ -125,7 +125,7 @@ func (a *Arena) UpdateWorld() {
 			ans = append(ans, val)
 		}
 	}
-	copy(a.animals, ans)
+	a.animals = ans
 	for i, _ := range a.animals {
 		a.animals[i].Turn()
 		a.animals[i].Move(a)
@@ -209,6 +209,8 @@ func NewArenaSample() *Arena {
 	b.genes = [8]int{2, 2, 2, 2, 2, 2, 2, 2}
 	b.x = 20
 	b.y = 15
+	b.energy = 2000
+	b.reproductionEnergy = 1000
 	a.animals = append(a.animals, b)
 
 	return &a
